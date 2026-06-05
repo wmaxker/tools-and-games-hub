@@ -1,0 +1,176 @@
+---
+import { navigationRegistry } from '../data/navigation';
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+const pathname = Astro.url.pathname;
+const currentYear = new Date().getFullYear();
+
+const calculators = navigationRegistry.filter(r => r.category === 'calculator');
+const games = navigationRegistry.filter(r => r.category === 'game');
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="index, follow" />
+    <title>{title} | Tools &amp; Games Hub</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- Google Fonts: DM Sans for UI, DM Mono for numeric contexts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: 'DM Sans', sans-serif;
+        background-color: #f8fafc; /* slate-50 */
+        color: #0f172a;            /* slate-900 */
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+    </style>
+  </head>
+  <body class="bg-slate-50 text-slate-900 flex flex-col min-h-screen">
+
+    <!-- ═══════════════════ HEADER ═══════════════════ -->
+    <header class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-14">
+          <a href="/" class="flex items-center gap-2 text-slate-900 no-underline">
+            <span class="text-xl font-semibold tracking-tight">Tools &amp; Games Hub</span>
+          </a>
+          <nav class="hidden md:flex items-center gap-1 text-sm font-medium">
+            <a
+              href="/"
+              class={`px-3 py-1.5 rounded-md transition-colors ${
+                pathname === '/'
+                  ? 'bg-indigo-50 text-indigo-600'
+                  : 'text-slate-600 hover:text-indigo-600 hover:bg-slate-100'
+              }`}
+            >
+              Home
+            </a>
+            <!-- Calculators dropdown label -->
+            <span class="px-3 py-1.5 text-slate-400 select-none">Calculators</span>
+            {calculators.map(app => (
+              <a
+                href={`/${app.slug}`}
+                class={`px-3 py-1.5 rounded-md transition-colors ${
+                  pathname === `/${app.slug}`
+                    ? 'bg-indigo-50 text-indigo-600'
+                    : 'text-slate-600 hover:text-indigo-600 hover:bg-slate-100'
+                }`}
+              >
+                {app.icon} {app.name}
+              </a>
+            ))}
+            <span class="px-3 py-1.5 text-slate-400 select-none">Games</span>
+            {games.map(app => (
+              <a
+                href={`/${app.slug}`}
+                class={`px-3 py-1.5 rounded-md transition-colors ${
+                  pathname === `/${app.slug}`
+                    ? 'bg-indigo-50 text-indigo-600'
+                    : 'text-slate-600 hover:text-indigo-600 hover:bg-slate-100'
+                }`}
+              >
+                {app.icon} {app.name}
+              </a>
+            ))}
+          </nav>
+          <!-- Mobile menu placeholder toggle (hamburger only, JS-free accordion pattern) -->
+          <label for="mobile-nav-toggle" class="md:hidden cursor-pointer p-2 rounded-md hover:bg-slate-100 text-slate-600">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </label>
+        </div>
+      </div>
+
+      <!-- Mobile nav drawer (CSS-only checkbox hack, no JS required) -->
+      <input type="checkbox" id="mobile-nav-toggle" class="sr-only peer" />
+      <nav class="md:hidden max-h-0 overflow-hidden peer-checked:max-h-screen transition-all duration-300 border-t border-slate-100 bg-white">
+        <div class="px-4 py-3 flex flex-col gap-1 text-sm font-medium">
+          <a href="/" class={`px-3 py-2 rounded-md ${pathname === '/' ? 'bg-indigo-50 text-indigo-600' : 'text-slate-600 hover:bg-slate-100'}`}>Home</a>
+          <p class="px-3 pt-2 pb-1 text-xs uppercase tracking-wider text-slate-400 font-semibold">Calculators</p>
+          {calculators.map(app => (
+            <a
+              href={`/${app.slug}`}
+              class={`px-3 py-2 rounded-md ${pathname === `/${app.slug}` ? 'bg-indigo-50 text-indigo-600' : 'text-slate-600 hover:bg-slate-100'}`}
+            >
+              {app.icon} {app.name}
+            </a>
+          ))}
+          <p class="px-3 pt-2 pb-1 text-xs uppercase tracking-wider text-slate-400 font-semibold">Games</p>
+          {games.map(app => (
+            <a
+              href={`/${app.slug}`}
+              class={`px-3 py-2 rounded-md ${pathname === `/${app.slug}` ? 'bg-indigo-50 text-indigo-600' : 'text-slate-600 hover:bg-slate-100'}`}
+            >
+              {app.icon} {app.name}
+            </a>
+          ))}
+        </div>
+      </nav>
+    </header>
+
+    <!-- ═══════════════════ MAIN CONTENT AREA ═══════════════════ -->
+    <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="flex gap-8 items-start">
+
+        <!-- Primary content column -->
+        <div class="flex-1 min-w-0 flex flex-col gap-6">
+          <!-- Main app injection slot -->
+          <slot />
+
+          <!-- Description / SEO context slot -->
+          <div class="prose prose-slate max-w-none text-sm text-slate-500 leading-relaxed border-t border-slate-100 pt-6">
+            <slot name="description" />
+          </div>
+        </div>
+
+        <!-- ── Fixed ad-rail: desktop only ── -->
+        <aside
+          aria-label="Advertisement"
+          class="hidden lg:flex flex-col items-center gap-2 flex-shrink-0 w-[140px]"
+        >
+          <!-- 140×600 structural placeholder — swap innerHTML for live AdSense unit -->
+          <div
+            class="w-[140px] h-[600px] bg-white border border-slate-200 rounded-lg shadow-sm flex flex-col items-center justify-center gap-2 text-slate-300 text-xs text-center select-none"
+            data-ad-slot="sidebar-140x600"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+            </svg>
+            <span>Ad Space<br/>140 × 600</span>
+          </div>
+        </aside>
+
+      </div>
+    </main>
+
+    <!-- ═══════════════════ FOOTER ═══════════════════ -->
+    <footer class="bg-white border-t border-slate-200 mt-auto">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-slate-500">
+        <p>&copy; {currentYear} Tools &amp; Games Hub. All rights reserved.</p>
+        <nav class="flex items-center gap-4">
+          <a href="/contact" class="hover:text-indigo-600 transition-colors">Contact</a>
+          <a href="/privacy" class="hover:text-indigo-600 transition-colors">Privacy Policy</a>
+        </nav>
+      </div>
+    </footer>
+
+  </body>
+</html>

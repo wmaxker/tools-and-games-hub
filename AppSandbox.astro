@@ -1,0 +1,109 @@
+---
+// AppSandbox.astro
+// Protective wrapper with client-side JS error boundary.
+// Any uncaught error thrown inside the slotted content will be caught,
+// the sandbox hidden, and an error card displayed with a reset button.
+---
+
+<div id="app-sandbox-wrapper" class="relative w-full">
+  <div id="app-sandbox-content">
+    <slot />
+  </div>
+
+  <!-- Error card — hidden by default, revealed only on crash -->
+  <div
+    id="app-sandbox-error"
+    class="hidden flex-col items-center justify-center gap-4 bg-white border border-slate-200 rounded-xl shadow-sm p-10 text-center"
+    role="alert"
+    aria-live="assertive"
+  >
+    <div class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+    </div>
+    <div>
+      <h2 class="text-base font-semibold text-slate-900 mb-1">Engine Encountered an Error</h2>
+      <p class="text-sm text-slate-500 max-w-xs mx-auto leading-relaxed">
+        Something went wrong while running this micro-app. Your session data is safe.
+        Use the button below to reset the engine and try again.
+      </p>
+    </div>
+    <pre
+      id="app-sandbox-error-message"
+      class="w-full max-w-sm text-left text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-4 py-3 overflow-x-auto font-mono whitespace-pre-wrap break-words"
+      aria-label="Error details"
+    ></pre>
+    <button
+      id="app-sandbox-reset"
+      class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2"
+      type="button"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="1 4 1 10 7 10"/>
+        <path d="M3.51 15a9 9 0 1 0 .49-4.5"/>
+      </svg>
+      Reset Engine
+    </button>
+  </div>
+</div>
+
+<script>
+  (function initAppSandbox() {
+    const wrapper  = document.getElementById('app-sandbox-wrapper');
+    const content  = document.getElementById('app-sandbox-content');
+    const errorBox = document.getElementById('app-sandbox-error');
+    const errorMsg = document.getElementById('app-sandbox-error-message');
+    const resetBtn = document.getElementById('app-sandbox-reset');
+
+    if (!wrapper || !content || !errorBox || !errorMsg || !resetBtn) return;
+
+    /** Show the error card and hide the crashed app content. */
+    function showError(message: string): void {
+      content.style.display = 'none';
+      errorBox.classList.remove('hidden');
+      errorBox.classList.add('flex');
+      errorMsg.textContent = message || 'An unknown error occurred.';
+    }
+
+    /** Hard-reload the page to flush all runtime state. */
+    function resetEngine(): void {
+      window.location.reload();
+    }
+
+    // Global uncaught error handler
+    window.addEventListener('error', (event: ErrorEvent) => {
+      // Only intercept errors that originate from within our sandbox wrapper
+      const target = event.target as HTMLElement | null;
+      if (target && wrapper.contains(target)) {
+        event.preventDefault();
+        showError(`${event.message}\n  at ${event.filename}:${event.lineno}:${event.colno}`);
+        return;
+      }
+
+      // For script errors with no target element (runtime JS), always catch them
+      if (!event.target || event.target === window) {
+        event.preventDefault();
+        showError(
+          `${event.message}` +
+          (event.filename ? `\n  at ${event.filename}:${event.lineno}:${event.colno}` : '')
+        );
+      }
+    });
+
+    // Catch unhandled promise rejections as well
+    window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
+      event.preventDefault();
+      const reason = event.reason;
+      const message =
+        reason instanceof Error
+          ? `${reason.name}: ${reason.message}${reason.stack ? '\n' + reason.stack : ''}`
+          : String(reason);
+      showError(message);
+    });
+
+    resetBtn.addEventListener('click', resetEngine);
+  })();
+</script>
